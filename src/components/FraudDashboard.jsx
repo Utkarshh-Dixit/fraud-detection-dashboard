@@ -10,8 +10,17 @@ const FraudDashboard = () => {
   const [activeTab, setActiveTab] = useState('apps');
   const [blockedEntities, setBlockedEntities] = useState([]);
   
-  const { user } = useUser();
+  // const { user } = useUser();
   const { signOut } = useAuth();
+
+  const { isLoaded, isSignedIn, user } = useUser();
+  const {getToken} = useAuth();
+
+if (!isLoaded) return <div>Loading...</div>;
+if (!isSignedIn) {
+  router.push('/sign-in');
+  return null;
+}
 
   // Mock data
   const mockData = {
@@ -158,21 +167,25 @@ const FraudDashboard = () => {
 
   const handleBlock = async (entityId) => {
     try {
+      const token = await getToken(); // Use getToken from useAuth
       const response = await fetch('/api/block', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Use the token here
+        },
         body: JSON.stringify({ entityId }),
       });
-
+  
       if (!response.ok) {
-        throw new Error(await response.text());
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Blocking failed');
       }
-
-      setBlockedEntities(prev => [...prev, entityId]);
-      setLoginError(''); // Clear any previous errors
+  
+      setBlockedEntities([...blockedEntities, entityId]);
     } catch (error) {
       console.error('Block failed:', error);
-      setLoginError(error.message || 'Failed to block entity');
+      setLoginError(error.message);
     }
   };
 
@@ -395,7 +408,7 @@ const FraudDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{app.reported_on}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    // Update the Block button in tables:
+                    
 <button 
   onClick={() => handleBlock(app.app_name)} // Use unique identifier
   className={`text-sm px-3 py-1 rounded ${
