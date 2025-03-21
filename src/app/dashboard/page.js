@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import FraudDashboard from '@/components/FraudDashboard';
 
-export default function Home() {
+export default function DashboardPage() {
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
 

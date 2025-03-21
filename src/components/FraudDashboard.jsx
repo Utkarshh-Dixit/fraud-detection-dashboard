@@ -1,19 +1,17 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, AlertCircle, Zap, Globe, LineChart, LogIn } from 'lucide-react';
+import { Moon, Sun, AlertCircle, Zap, Globe, LineChart, LogIn , LogOut} from 'lucide-react';
+import { useUser, useAuth } from '@clerk/nextjs';
 
 const FraudDashboard = () => {
-  // State for theme switching
   const [darkMode, setDarkMode] = useState(false);
-  // State for authentication
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  // State for dashboard data
   const [fraudData, setFraudData] = useState(null);
   const [activeTab, setActiveTab] = useState('apps');
+  const [blockedEntities, setBlockedEntities] = useState([]);
+  
+  const { user } = useUser();
+  const { signOut } = useAuth();
 
   // Mock data
   const mockData = {
@@ -133,33 +131,77 @@ const FraudDashboard = () => {
   };
 
   // Load mock data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/fraud-data');
-        const data = await response.json();
-        setFraudData(data);
-      } catch (error) {
-        console.error('Error fetching fraud data:', error);
-      }
-    };
+  // useEffect(() => {
+  //   // const fetchData = async () => {
+  //   //   // In a real app, this would fetch from your API
+  //   //   try {
+  //   //     const response = await fetch('/api/fraud-data');
+  //   //     const data = await response.json();
+  //   //     setFraudData(data);
+  //   //   } catch (error) {
+  //   //     console.error('Error fetching fraud data:', error);
+  //   //     // Use mock data as fallback
+  //   //   }
+  //   // };
     
-    fetchData();
-  }, []);
+  //   if (isAuthenticated) {
+  //     setFraudData(mockData);
+  //     // fetchData();
+  //   }
+  // }, [isAuthenticated]);
 
-  // Handle login
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // Simple authentication check against mock data
-    const user = mockData.user_authentication.find(u => u.email === email);
+  useEffect(() => {
     if (user) {
-      // In a real app, you'd verify the password hash
-      // For demo purposes, we'll just check if the email exists
-      setIsAuthenticated(true);
-      setLoginError('');
-    } else {
-      setLoginError('Invalid email or password');
+      setFraudData(mockData);
     }
+  }, [user]);
+
+  const handleBlock = async (entityId) => {
+    try {
+      const response = await fetch('/api/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entityId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      setBlockedEntities(prev => [...prev, entityId]);
+      setLoginError(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Block failed:', error);
+      setLoginError(error.message || 'Failed to block entity');
+    }
+  };
+
+  // Improved login handler
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   setLoginError('');
+    
+  //   try {
+  //     const result = await signIn('credentials', {
+  //       redirect: false,
+  //       email,
+  //       password,
+  //     });
+
+  //     if (result?.error) {
+  //       throw new Error(result.error);
+  //     }
+  //   } catch (error) {
+  //     setLoginError(error.message || 'Authentication failed');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut();
   };
 
   // Toggle dark mode
@@ -169,20 +211,16 @@ const FraudDashboard = () => {
 
   // Risk level badge color
   const getRiskLevelColor = (risk) => {
-    switch (risk) {
-      case 'High':
-        return darkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800';
-      case 'Medium':
-        return darkMode ? 'bg-yellow-800 text-yellow-200' : 'bg-yellow-100 text-yellow-800';
-      case 'Low':
-        return darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800';
-      default:
-        return darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800';
-    }
+    const colorMap = {
+      High: darkMode ? 'bg-red-800 text-red-200' : 'bg-red-100 text-red-800',
+      Medium: darkMode ? 'bg-orange-800 text-orange-200' : 'bg-orange-100 text-orange-800',
+      Low: darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'
+    };
+    return colorMap[risk] || (darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-800');
   };
 
   // Login screen
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className={`min-h-screen flex items-center justify-center p-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
         <div className={`max-w-md w-full p-8 rounded-lg shadow-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -210,14 +248,17 @@ const FraudDashboard = () => {
             </div>
             <div className="mb-6">
               <label className="block text-sm font-medium mb-1">Password</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                className={`w-full p-2 rounded border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`} 
-                placeholder="Enter any password (demo)"
-                required
-              />
+              <input
+  type="password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className={`w-full p-2 rounded border ${
+    darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+  }`}
+  placeholder="Enter your password"
+  required
+  minLength="8"
+/>
             </div>
             {loginError && <p className="text-red-500 mb-4">{loginError}</p>}
             <button 
@@ -243,11 +284,23 @@ const FraudDashboard = () => {
           <h1 className="text-xl font-bold">Fraud Detection Dashboard</h1>
         </div>
         <div className="flex items-center">
-          <div className="mr-4">
-            <span className="text-sm font-medium">{email}</span>
-          </div>
+        {user && (
+    <div className="mr-4">
+      <span className="text-sm font-medium">{user.primaryEmailAddress?.emailAddress}</span>
+      <span className={`px-2 py-1 text-xs rounded-full ${darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
+        {user.publicMetadata.role || 'User'}
+      </span>
+    </div>
+  )}
           <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-opacity-80">
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button 
+            onClick={handleLogout} 
+            className="p-2 rounded-full hover:bg-opacity-80 flex items-center text-sm"
+          >
+            <LogOut size={20} className="mr-1" />
+            Logout
           </button>
         </div>
       </nav>
@@ -342,7 +395,18 @@ const FraudDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{app.reported_on}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button className="text-blue-600 hover:text-blue-800 mr-2">Block</button>
+                    // Update the Block button in tables:
+<button 
+  onClick={() => handleBlock(app.app_name)} // Use unique identifier
+  className={`text-sm px-3 py-1 rounded ${
+    blockedEntities.includes(app.app_name)
+      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+      : 'bg-red-100 text-red-800 hover:bg-red-200'
+  }`}
+  disabled={blockedEntities.includes(app.app_name)}
+>
+  {blockedEntities.includes(app.app_name) ? 'Blocked' : 'Block'}
+</button>
                       <button className="text-blue-600 hover:text-blue-800">Details</button>
                     </td>
                   </tr>
@@ -408,7 +472,9 @@ const TrendChart = ({ data, darkMode }) => {
   const padding = { top: 20, right: 30, bottom: 30, left: 40 };
 
   // Calculate scales
-  const xScale = (i) => padding.left + (i * (width - padding.left - padding.right) / (chartData.length - 1));
+  // Update xScale calculation:
+const xScale = (i) => 
+  padding.left + (i * (width - padding.left - padding.right) / (chartData.length - 1 || 1)); // Prevent division by zero
   const yScale = (value) => height - padding.bottom - ((value / yAxisMax) * (height - padding.top - padding.bottom));
 
   // Generate points for path
