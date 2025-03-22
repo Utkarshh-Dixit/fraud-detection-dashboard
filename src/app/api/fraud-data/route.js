@@ -6,35 +6,65 @@ export async function GET() {
             "developer": "XYZ Solutions",
             "category": "Finance",
             "risk_level": "High",
-            "reported_on": "2025-03-15"
+            "reported_on": "2025-03-15",
+            "preventive_measures": [
+        "Verify app developer through official banking websites",
+        "Check for proper SSL encryption (https://)",
+        "Enable two-factor authentication for financial apps",
+        "Regularly monitor bank statements for suspicious activity"
+      ]
           },
           {
             "app_name": "FreeCryptoWin",
             "developer": "ABC Corp",
             "category": "Trading",
             "risk_level": "Medium",
-            "reported_on": "2025-03-12"
+            "reported_on": "2025-03-12",
+            "preventive_measures": [
+        "Verify app developer through official banking websites",
+        "Check for proper SSL encryption (https://)",
+        "Enable two-factor authentication for financial apps",
+        "Regularly monitor bank statements for suspicious activity"
+      ]
           },
           {
             "app_name": "LoanFastNow",
             "developer": "QuickMoney Ltd",
             "category": "Finance",
             "risk_level": "High",
-            "reported_on": "2025-03-10"
+            "reported_on": "2025-03-10",
+            "preventive_measures": [
+        "Verify app developer through official banking websites",
+        "Check for proper SSL encryption (https://)",
+        "Enable two-factor authentication for financial apps",
+        "Regularly monitor bank statements for suspicious activity"
+      ]
           },
           {
             "app_name": "MusicDownloader",
             "developer": "Unknown Dev",
             "category": "Entertainment",
             "risk_level": "Low",
-            "reported_on": "2025-03-09"
+            "reported_on": "2025-03-09",
+            "preventive_measures": [
+        "Verify app developer through official banking websites",
+        "Check for proper SSL encryption (https://)",
+        "Enable two-factor authentication for financial apps",
+        "Regularly monitor bank statements for suspicious activity"
+      ]
           },
           {
             "app_name": "InstaFollowers",
             "developer": "GrowthHackers Inc",
             "category": "Social Media",
             "risk_level": "Medium",
-            "reported_on": "2025-03-07"
+            "reported_on": "2025-03-07",
+            "preventive_measures": [
+        "Verify app developer through official banking websites",
+        "Check for proper SSL encryption (https://)",
+        "Enable two-factor authentication for financial apps",
+        "Regularly monitor bank statements for suspicious activity"
+      ]
           }
         ],
         "fraudulent_urls": [
@@ -42,31 +72,61 @@ export async function GET() {
             "url": "http://free-money-now.com",
             "risk_level": "High",
             "detected_on": "2025-03-14",
-            "category": "Phishing"
+            "category": "Phishing",
+            "preventive_measures": [
+        "Never enter personal information on suspicious links",
+        "Check URL spelling carefully for typosquatting",
+        "Use browser phishing protection extensions",
+        "Hover over links to verify destination before clicking"
+      ]
           },
           {
             "url": "http://get-rich-fast.biz",
             "risk_level": "Medium",
             "detected_on": "2025-03-12",
-            "category": "Scam"
+            "category": "Scam",
+            "preventive_measures": [
+        "Never enter personal information on suspicious links",
+        "Check URL spelling carefully for typosquatting",
+        "Use browser phishing protection extensions",
+        "Hover over links to verify destination before clicking"
+      ]
           },
           {
             "url": "http://unlimited-downloads.net",
             "risk_level": "Low",
             "detected_on": "2025-03-10",
-            "category": "Malware"
+            "category": "Malware",
+            "preventive_measures": [
+        "Never enter personal information on suspicious links",
+        "Check URL spelling carefully for typosquatting",
+        "Use browser phishing protection extensions",
+        "Hover over links to verify destination before clicking"
+      ]
           },
           {
             "url": "http://win-bitcoins-today.com",
             "risk_level": "High",
             "detected_on": "2025-03-09",
-            "category": "Crypto Scam"
+            "category": "Crypto Scam",
+            "preventive_measures": [
+        "Never enter personal information on suspicious links",
+        "Check URL spelling carefully for typosquatting",
+        "Use browser phishing protection extensions",
+        "Hover over links to verify destination before clicking"
+      ]
           },
           {
             "url": "http://fakebank-login.com",
             "risk_level": "High",
             "detected_on": "2025-03-06",
-            "category": "Phishing"
+            "category": "Phishing",
+            "preventive_measures": [
+        "Never enter personal information on suspicious links",
+        "Check URL spelling carefully for typosquatting",
+        "Use browser phishing protection extensions",
+        "Hover over links to verify destination before clicking"
+      ]
           }
         ],
         "fraud_trends_30_days": [

@@ -178,6 +178,54 @@ const FraudDashboard = () => {
   //   }
   // };
 
+  const [selectedItem, setSelectedItem] = useState(null);
+
+// Create a modal component
+const PreventionModal = ({ item, onClose }) => {
+  if (!item) return null;
+
+  return (
+    <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
+      darkMode ? 'text-white' : 'text-gray-900'
+    }`}>
+      <div className={`p-6 rounded-lg max-w-md w-full mx-4 ${
+        darkMode ? 'bg-gray-800' : 'bg-white'
+      }`}>
+        <h3 className="text-xl font-bold mb-4 flex items-center">
+          <AlertCircle className="mr-2" />
+          Prevention Measures for {item.app_name || item.url}
+        </h3>
+        
+        <div className="mb-4">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            getRiskLevelColor(item.risk_level)
+          }`}>
+            {item.risk_level} Risk
+          </span>
+        </div>
+
+        <ul className="list-disc pl-5 space-y-2">
+          {item.preventive_measures.map((measure, index) => (
+            <li key={index} className="text-sm">{measure}</li>
+          ))}
+        </ul>
+
+        <button
+          onClick={onClose}
+          className={`mt-6 px-4 py-2 rounded-lg ${
+            darkMode 
+              ? 'bg-gray-700 hover:bg-gray-600' 
+              : 'bg-gray-200 hover:bg-gray-300'
+          }`}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
   const handleBlock = async (entity, entityType) => {
     try {
       const token = await getToken({ template: "Stealthmode" });
@@ -515,6 +563,10 @@ const FraudDashboard = () => {
           </button>
         </div>
 
+        <PreventionModal 
+      item={selectedItem}
+      onClose={() => setSelectedItem(null)}
+    />
         {/* App List */}
         {activeTab === "apps" && (
           <div
@@ -590,7 +642,7 @@ const FraudDashboard = () => {
 >
   {blockedEntities.includes(app.app_name) ? 'Blocked' : 'Block'}
 </button>
-                      <button className="text-blue-600 hover:text-blue-800 ml-2">
+                      <button onClick={() => setSelectedItem(app)} className="text-blue-600 hover:text-blue-800 ml-2  hover:underline hover:text-blue-800 hover:cursor-pointer">
                         Details
                       </button>
                     </td>
@@ -670,7 +722,7 @@ const FraudDashboard = () => {
 >
   {blockedEntities.includes(url.url) ? 'Blocked' : 'Block'}
 </button>
-                      <button className="text-blue-600 hover:text-blue-800 ml-2">
+                      <button onClick={() => setSelectedItem(url)} className="text-blue-600 hover:text-blue-800 ml-2 hover:underline hover:text-blue-800 hover:cursor-pointer">
                         Details 
                       </button>
                     </td>
