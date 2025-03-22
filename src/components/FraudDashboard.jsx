@@ -210,7 +210,10 @@ const FraudDashboard = () => {
         throw new Error(`Block failed: ${errorText}`);
       }
   
-      const data = await response.json();
+      // Process the response without assigning to an unused variable
+      await response.json();
+      
+      // Update UI with blocked entity
       setBlockedEntities([...blockedEntities, payload.entityId]);
       
     } catch (error) {
