@@ -78,21 +78,76 @@ const FraudDashboard = () => {
     if (user) fetchMockData();
   }, [user, getToken]);
 
-  const handleBlock = async (entity) => {
+  // const handleBlock = async (entity) => {
+  //   try {
+  //     const token = await getToken({template: "Stealthmode"});
+  //     console.log("Token: ", token);
+  
+  //     // Create a more complete payload with entity information
+  //     const payload = {
+  //       entityId: entity.app_name, // Use as unique identifier
+  //       entityType: 'app',
+  //       riskLevel: entity.risk_level,
+  //       category: entity.category,
+  //       developer: entity.developer,
+  //       reportedOn: entity.reported_on
+  //     };
+  
+  //     console.log("Sending payload:", payload);
+  
+  //     const response = await fetch('http://localhost:5000/api/block', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+  
+  //     // Handle response
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       console.error('Error response:', errorText);
+  //       throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+  //     }
+  
+  //     const data = await response.json();
+  //     console.log("Success response:", data);
+      
+  //     // Update UI to show this entity has been blocked
+  //     setBlockedEntities([...blockedEntities, entity.app_name]);
+      
+  //   } catch (error) {
+  //     console.error('Block operation failed:', error);
+  //     setLoginError(error.message);
+  //   }
+  // };
+
+  const handleBlock = async (entity, entityType) => {
     try {
       const token = await getToken({template: "Stealthmode"});
-      console.log("Token: ", token);
-  
-      // Create a more complete payload with entity information
-      const payload = {
-        entityId: entity.app_name, // Use as unique identifier
-        entityType: 'app',
-        riskLevel: entity.risk_level,
-        category: entity.category,
-        developer: entity.developer,
-        reportedOn: entity.reported_on
-      };
-  
+      
+      // Create a payload based on entity type
+      let payload;
+      if (entityType === 'app') {
+        payload = {
+          entityId: entity.app_name,
+          entityType: 'app',
+          riskLevel: entity.risk_level,
+          category: entity.category,
+          developer: entity.developer,
+          reportedOn: entity.reported_on
+        };
+      } else if (entityType === 'url') {
+        payload = {
+          entityId: entity.url,
+          entityType: 'url',
+          riskLevel: entity.risk_level,
+          category: entity.category,
+          detectedOn: entity.detected_on
+        };
+      }
+      
       console.log("Sending payload:", payload);
   
       const response = await fetch('http://localhost:5000/api/block', {
@@ -103,25 +158,26 @@ const FraudDashboard = () => {
         },
         body: JSON.stringify(payload),
       });
-  
-      // Handle response
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
         throw new Error(`Request failed with status ${response.status}: ${errorText}`);
       }
-  
+      
       const data = await response.json();
       console.log("Success response:", data);
       
-      // Update UI to show this entity has been blocked
-      setBlockedEntities([...blockedEntities, entity.app_name]);
+      // Update UI - use the appropriate ID field based on entity type
+      const entityId = entityType === 'app' ? entity.app_name : entity.url;
+      setBlockedEntities([...blockedEntities, entityId]);
       
     } catch (error) {
       console.error('Block operation failed:', error);
       setLoginError(error.message);
     }
   };
+  
 
 
   // Improved login handler
@@ -480,7 +536,7 @@ const FraudDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button 
-  onClick={() => handleBlock(app)} // Pass the entire app object
+  onClick={() => handleBlock(app, 'app')} // Pass the entire app object and entity type
   className={`text-sm px-3 py-1 rounded ${
     blockedEntities.includes(app.app_name)
       ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
@@ -560,15 +616,15 @@ const FraudDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <button 
-  onClick={() => handleBlock(app)} // Pass the entire app object
+  onClick={() => handleBlock(url, 'url')} // Pass the entire url object and entity type
   className={`text-sm px-3 py-1 rounded ${
-    blockedEntities.includes(app.app_name)
+    blockedEntities.includes(url.url)
       ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
       : 'bg-red-100 text-red-800 hover:bg-red-200'
   }`}
-  disabled={blockedEntities.includes(app.app_name)}
+  disabled={blockedEntities.includes(url.url)}
 >
-  {blockedEntities.includes(app.app_name) ? 'Blocked' : 'Block'}
+  {blockedEntities.includes(url.url) ? 'Blocked' : 'Block'}
 </button>
                       <button className="text-blue-600 hover:text-blue-800 ml-2">
                         Details 
