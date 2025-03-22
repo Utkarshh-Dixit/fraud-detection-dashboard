@@ -35,7 +35,7 @@ const FraudDashboard = () => {
       const fetchBlockedEntities = async () => {
         try {
           const token = await getToken({template: "Stealthmode"});
-          const response = await fetch('http://localhost:5000/api/blocked-entities', {
+          const response = await fetch('/api/blocked-entities', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -62,7 +62,7 @@ const FraudDashboard = () => {
     const fetchMockData = async () => {
       try {
         const token = await getToken({ template: "Stealthmode" });
-        const response = await fetch("http://localhost:5000/api/mock-data", {
+        const response = await fetch("/api/fraud-data", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -123,34 +123,80 @@ const FraudDashboard = () => {
   //   }
   // };
 
+  // const handleBlock = async (entity, entityType) => {
+  //   try {
+  //     const token = await getToken({template: "Stealthmode"});
+      
+  //     // Create a payload based on entity type
+  //     let payload;
+  //     if (entityType === 'app') {
+  //       payload = {
+  //         entityId: entity.app_name,
+  //         entityType: 'app',
+  //         riskLevel: entity.risk_level,
+  //         category: entity.category,
+  //         developer: entity.developer,
+  //         reportedOn: entity.reported_on
+  //       };
+  //     } else if (entityType === 'url') {
+  //       payload = {
+  //         entityId: entity.url,
+  //         entityType: 'url',
+  //         riskLevel: entity.risk_level,
+  //         category: entity.category,
+  //         detectedOn: entity.detected_on
+  //       };
+  //     }
+      
+  //     console.log("Sending payload:", payload);
+  
+  //     const response = await fetch('http://localhost:5000/api/block', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       body: JSON.stringify(payload),
+  //     });
+      
+  //     if (!response.ok) {
+  //       const errorText = await response.text();
+  //       console.error('Error response:', errorText);
+  //       throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+  //     }
+      
+  //     const data = await response.json();
+  //     console.log("Success response:", data);
+      
+  //     // Update UI - use the appropriate ID field based on entity type
+  //     const entityId = entityType === 'app' ? entity.app_name : entity.url;
+  //     setBlockedEntities([...blockedEntities, entityId]);
+      
+  //   } catch (error) {
+  //     console.error('Block operation failed:', error);
+  //     setLoginError(error.message);
+  //   }
+  // };
+
   const handleBlock = async (entity, entityType) => {
     try {
-      const token = await getToken({template: "Stealthmode"});
+      const token = await getToken({ template: "Stealthmode" });
       
-      // Create a payload based on entity type
-      let payload;
-      if (entityType === 'app') {
-        payload = {
-          entityId: entity.app_name,
-          entityType: 'app',
-          riskLevel: entity.risk_level,
-          category: entity.category,
+      const payload = {
+        entityId: entityType === 'app' ? entity.app_name : entity.url,
+        entityType,
+        riskLevel: entity.risk_level,
+        category: entity.category,
+        ...(entityType === 'app' && {
           developer: entity.developer,
           reportedOn: entity.reported_on
-        };
-      } else if (entityType === 'url') {
-        payload = {
-          entityId: entity.url,
-          entityType: 'url',
-          riskLevel: entity.risk_level,
-          category: entity.category,
+        }),
+        ...(entityType === 'url' && {
           detectedOn: entity.detected_on
-        };
-      }
-      
-      console.log("Sending payload:", payload);
+        })
+      };
   
-      const response = await fetch('http://localhost:5000/api/block', {
+      const response = await fetch('/api/block', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,19 +204,14 @@ const FraudDashboard = () => {
         },
         body: JSON.stringify(payload),
       });
-      
+  
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
+        throw new Error(`Block failed: ${errorText}`);
       }
-      
+  
       const data = await response.json();
-      console.log("Success response:", data);
-      
-      // Update UI - use the appropriate ID field based on entity type
-      const entityId = entityType === 'app' ? entity.app_name : entity.url;
-      setBlockedEntities([...blockedEntities, entityId]);
+      setBlockedEntities([...blockedEntities, payload.entityId]);
       
     } catch (error) {
       console.error('Block operation failed:', error);

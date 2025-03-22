@@ -1,55 +1,41 @@
+import { auth } from '@clerk/nextjs';
 import { NextResponse } from 'next/server';
-import { currentUser } from '@clerk/nextjs/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { connectToDB } from '@/lib/mongodb';
+import BlockedEntity from '@/models/BlockedEntity';
 
 export async function POST(req) {
   try {
-    // Get Clerk user
-    const user = await currentUser();
-    console.log("User: ", user);
+    await connectToDB();
+    const { userId } = auth();
     
-    if (!user) {
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await req.json();
+    const { entityId } = payload;
+
+    const existingEntity = await BlockedEntity.findOne({ entityId });
+    if (existingEntity) {
       return NextResponse.json(
-        { error: 'Unauthorized - No user session' }, 
-        { status: 401 }
+        { error: 'Entity already blocked', entity: existingEntity },
+        { status: 409 }
       );
     }
 
-    // Verify user role
-    const userRole = user.publicMetadata?.role;
-    if (userRole !== 'Admin') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Insufficient privileges' }, 
-        { status: 403 }
-      );
-    }
-
-    const { entityId } = await req.json();
-
-    // Create blocked entity
-    const blockedEntity = await prisma.blockedEntity.create({
-      data: { 
-        entityId, 
-        blockedBy: user.id 
-      }
+    const newEntity = new BlockedEntity({
+      ...payload,
+      blockedBy: userId
     });
-
-    console.log("Blocked Entity: ", blockedEntity);
-
-    return NextResponse.json({ 
-      success: true, 
-      data: blockedEntity 
-    });
+    
+    const savedEntity = await newEntity.save();
+    return NextResponse.json(savedEntity, { status: 201 });
 
   } catch (error) {
     console.error('Error blocking entity:', error);
     return NextResponse.json(
-      { error: 'Internal server error' }, 
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
