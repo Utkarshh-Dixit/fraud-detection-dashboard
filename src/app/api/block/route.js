@@ -1,24 +1,25 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export async function POST(req) {
   try {
-    // Get Clerk user ID
-    const { userId, orgId, sessionClaims } = auth();
+    // Get Clerk user
+    const user = await currentUser();
+    console.log("User: ", user);
     
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized - No user session' }, 
         { status: 401 }
       );
     }
 
-    // Verify user role if needed
-    const userRole = sessionClaims?.publicMetadata?.role;
-    if (!userRole || userRole !== 'Admin') {
+    // Verify user role
+    const userRole = user.publicMetadata?.role;
+    if (userRole !== 'Admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Insufficient privileges' }, 
         { status: 403 }
@@ -27,13 +28,15 @@ export async function POST(req) {
 
     const { entityId } = await req.json();
 
-    // Create blocked entity with Clerk user ID
+    // Create blocked entity
     const blockedEntity = await prisma.blockedEntity.create({
       data: { 
         entityId, 
-        blockedBy: userId 
+        blockedBy: user.id 
       }
     });
+
+    console.log("Blocked Entity: ", blockedEntity);
 
     return NextResponse.json({ 
       success: true, 
